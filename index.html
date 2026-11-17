@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>환율 계산기, 병우❤️지은 신혼여행</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F5; --surface:#FFFFFF; --surface2:#F5F7FA; --key:#E6EBF0; --keyhover:#DAE1E8;
+  --ink:#18212E; --muted:#5B6878; --line:#D8DFE7;
+  --CHF:#C8102E; --CZK:#93701E; --HUF:#15766A; --EUR:#2C4FA3;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161E; --surface:#18212C; --surface2:#1F2936; --key:#243040; --keyhover:#2C3A4D;
+    --ink:#E6ECF2; --muted:#9AA8B9; --line:#2C3847;
+    --CHF:#F2667A; --CZK:#DDB65E; --HUF:#4DB8A6; --EUR:#8AA6F0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161E; --surface:#18212C; --surface2:#1F2936; --key:#243040; --keyhover:#2C3A4D;
+  --ink:#E6ECF2; --muted:#9AA8B9; --line:#2C3847;
+  --CHF:#F2667A; --CZK:#DDB65E; --HUF:#4DB8A6; --EUR:#8AA6F0;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55;--accent:var(--CHF);-webkit-tap-highlight-color:transparent}
+body[data-cur="CZK"]{--accent:var(--CZK)}
+body[data-cur="HUF"]{--accent:var(--HUF)}
+body[data-cur="EUR"]{--accent:var(--EUR)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:460px;margin:0 auto;padding:20px 16px 40px}
+
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+header h1{font-family:"Gowun Batang",serif;font-size:24px;margin:0;line-height:1.2}
+header p{margin:0;font-size:13px;color:var(--muted);text-align:right}
+
+.curs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cur{all:unset;cursor:pointer;text-align:center;padding:10px 4px 9px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.cur b{display:block;font-size:16px;font-weight:600;letter-spacing:.02em}
+.cur span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.cur[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:var(--surface)}
+.cur[aria-pressed="true"] span{color:var(--surface);opacity:.85}
+.cur:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+
+.screen{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;border-top:5px solid var(--accent)}
+.inrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.inrow .code{font-size:14px;font-weight:600;color:var(--accent)}
+.inrow .val{font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;text-align:right;word-break:break-all;line-height:1.2}
+.inrow .val.empty{color:var(--muted)}
+.out{margin-top:10px;padding-top:12px;border-top:1px dashed var(--line);text-align:right}
+.out .big{font-family:"Gowun Batang",serif;font-weight:700;font-size:clamp(36px,11vw,48px);line-height:1.1;font-variant-numeric:tabular-nums;color:var(--accent);word-break:break-all}
+.out .sub{font-size:14px;color:var(--muted);margin-top:4px;min-height:1.55em}
+.tip{margin-top:10px;font-size:14px;display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
+.tip b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+.swap{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500}
+.swap:hover{background:var(--surface2)}
+.swap svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.swap:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.k{all:unset;cursor:pointer;text-align:center;padding:15px 0;border-radius:14px;background:var(--key);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;user-select:none}
+.k:hover{background:var(--keyhover)}
+.k:active{transform:scale(.97)}
+.k.fn{font-size:16px;color:var(--muted)}
+.k:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+section{margin-top:24px}
+section h2{font-family:"Gowun Batang",serif;font-size:19px;margin:0 0 8px}
+.hint{font-size:14px;color:var(--muted);margin:0 0 10px}
+.hint b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-variant-numeric:tabular-nums}
+td{padding:10px 14px;border-top:1px solid var(--line);font-size:15px}
+tr:first-child td{border-top:0}
+td:last-child{text-align:right;color:var(--muted)}
+tr{cursor:pointer}
+tr:hover td{background:var(--surface2)}
+tr:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
+summary{cursor:pointer;padding:10px 0;font-weight:500;font-size:15px}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rates{display:grid;gap:10px;padding:4px 0 14px}
+.rates label{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:10px;font-size:14px}
+.rates input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-size:16px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.rates input:focus{outline:2px solid var(--ink);outline-offset:1px}
+.rates .u{color:var(--muted)}
+.reset{all:unset;cursor:pointer;font-size:14px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.note{font-size:13px;color:var(--muted);margin-top:16px}
+
+@media (prefers-reduced-motion:reduce){.k:active{transform:none}}
+</style>
+</head>
+<body data-cur="CHF">
+<div class="wrap">
+  <header>
+    <h1>환율 계산기</h1>
+    <p id="ratenote">11월 13일 환율 기준</p>
+  </header>
+
+  <div class="curs" role="group" aria-label="통화 선택" id="curs"></div>
+
+  <div class="screen" aria-live="polite">
+    <div class="inrow"><span class="code" id="incode">CHF</span><span class="val empty" id="inval">0</span></div>
+    <div class="out">
+      <div class="big" id="outbig">0원</div>
+      <div class="sub" id="outsub"></div>
+    </div>
+    <div class="tip" id="tiprow"><span>팁 10%를 더하면</span><b id="tipval">0원</b></div>
+  </div>
+
+  <button class="swap" id="swap" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg><span id="swaplabel">원화 금액으로 입력하기</span></button>
+
+  <div class="pad" id="pad"></div>
+
+  <section>
+    <h2>자주 보는 금액</h2>
+    <p class="hint" id="mental"></p>
+    <table><tbody id="ref"></tbody></table>
+  </section>
+
+  <section>
+    <details>
+      <summary>환율 고치기</summary>
+      <div class="rates" id="rates"></div>
+      <button class="reset" id="reset" type="button">기본 환율로 되돌리기</button>
+      <p class="note">환전하거나 카드 앱에서 본 실제 환율로 고치면 이 기기에 저장돼요. 카드사 수수료가 붙으면 실제 결제액은 1–2% 더 나올 수 있어요.</p>
+    </details>
+  </section>
+</div>
+
+<script>
+const CURS = {
+  CHF:{name:"스위스 프랑",short:"스위스",dec:2,ref:[1,5,10,20,50,100],mental:r=>`<b>1프랑 ≈ ${round(r,100).toLocaleString("ko-KR")}원.</b> 10프랑이면 약 ${man(r*10)}이에요.`},
+  CZK:{name:"체코 코루나",short:"체코",dec:0,ref:[50,100,200,500,1000,2000],mental:r=>`<b>100코루나 ≈ ${(round(r*100,100)).toLocaleString("ko-KR")}원.</b> 가격에서 0을 두 개 떼고 ${(r*100/1000).toFixed(0)}을 곱하면 천 원 단위가 나와요.`},
+  HUF:{name:"헝가리 포린트",short:"헝가리",dec:0,ref:[500,1000,2000,5000,10000,20000],mental:r=>`<b>1,000포린트 ≈ ${(round(r*1000,100)).toLocaleString("ko-KR")}원.</b> 가격에서 0을 세 개 떼고 ${(r).toFixed(0)}를 곱하면 천 원 단위가 나와요.`},
+  EUR:{name:"유로",short:"유로",dec:2,ref:[1,5,10,20,50,100],mental:r=>`<b>1유로 ≈ ${round(r,100).toLocaleString("ko-KR")}원.</b> 10유로면 약 ${man(r*10)}이에요.`}
+};
+const DEFAULTS = { CHF:1590, CZK:60, HUF:4.0, EUR:1470 };
+const store = {
+  get(k,f){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ return f; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const state = {
+  cur: store.get("fx-cur","CHF"),
+  rates: Object.assign({}, DEFAULTS, store.get("fx-rates",{})),
+  reverse: false,
+  input: ""
+};
+if(!CURS[state.cur]) state.cur="CHF";
+
+function round(v,step){ return Math.round(v/step)*step; }
+function man(v){
+  const r = v>=10000 ? round(v,1000) : round(v,100);
+  if(r>=10000){
+    const m=Math.floor(r/10000), c=Math.round((r%10000)/1000);
+    return c ? `${m}만 ${c}천 원` : `${m}만 원`;
+  }
+  return `${r.toLocaleString("ko-KR")}원`;
+}
+function krwStr(v){
+  const step = v>=1000 ? 100 : 10;
+  return `${round(v,step).toLocaleString("ko-KR")}원`;
+}
+function localStr(v,cur){
+  const d=CURS[cur].dec;
+  return v.toLocaleString("ko-KR",{minimumFractionDigits:d?2:0,maximumFractionDigits:d});
+}
+function fmtInput(s){
+  if(!s) return "0";
+  const [i,f]=s.split(".");
+  const ii=(i||"0").replace(/^0+(?=\d)/,"");
+  const withComma=Number(ii).toLocaleString("ko-KR");
+  return f!==undefined ? `${withComma}.${f}` : withComma;
+}
+
+function renderCurs(){
+  document.getElementById("curs").innerHTML = Object.entries(CURS).map(([k,c])=>
+    `<button class="cur" type="button" style="--c:var(--${k})" aria-pressed="${state.cur===k}" data-cur="${k}"><b>${k}</b><span>${c.short}</span></button>`).join("");
+  document.querySelectorAll(".cur").forEach(b=>b.onclick=()=>{
+    state.cur=b.dataset.cur; store.set("fx-cur",state.cur); render();
+  });
+}
+function renderPad(){
+  const keys=["C","000","⌫","7","8","9","4","5","6","1","2","3",".","0","00"];
+  document.getElementById("pad").innerHTML = keys.map(k=>{
+    const fn = ["C","⌫"].includes(k);
+    const label = k==="C" ? "지우기" : k==="⌫" ? "한 글자 지우기" : k;
+    return `<button class="k${fn?" fn":""}" type="button" data-k="${k}" aria-label="${label}">${k==="C"?"C":k}</button>`;
+  }).join("");
+  document.querySelectorAll(".k").forEach(b=>b.onclick=()=>press(b.dataset.k));
+}
+function press(k){
+  let s=state.input;
+  if(k==="C") s="";
+  else if(k==="⌫") s=s.slice(0,-1);
+  else if(k==="."){
+    const allowDec = state.reverse ? false : CURS[state.cur].dec>0;
+    if(!allowDec || s.includes(".")) return;
+    s = (s||"0")+".";
+  } else {
+    if(s.includes(".")){
+      const f=s.split(".")[1];
+      if(f.length + k.length > 2) return;
+    }
+    if(s.replace(".","").length + k.length > 10) return;
+    if(s==="" && /^0+$/.test(k)) { s = k==="0" ? "" : ""; }
+    else s+=k;
+  }
+  state.input=s; renderScreen();
+}
+function renderScreen(){
+  const c=CURS[state.cur], r=state.rates[state.cur];
+  const v=parseFloat(state.input||"0")||0;
+  const inval=document.getElementById("inval");
+  inval.textContent=fmtInput(state.input);
+  inval.classList.toggle("empty",!state.input);
+  document.getElementById("incode").textContent = state.reverse ? "원화" : state.cur;
+  const big=document.getElementById("outbig"), sub=document.getElementById("outsub");
+  if(!state.reverse){
+    const krw=v*r;
+    big.textContent = krwStr(krw);
+    sub.textContent = krw>=10000 ? `약 ${man(krw)}` : (v ? `${c.name} 기준` : "");
+    document.getElementById("tipval").textContent = krwStr(krw*1.1);
+    document.getElementById("tiprow").style.display="";
+  } else {
+    const loc=v/r;
+    big.textContent = `${state.cur} ${localStr(loc,state.cur)}`;
+    sub.textContent = v ? `${c.name}로 바꾼 금액` : "";
+    document.getElementById("tiprow").style.display="none";
+  }
+}
+function renderRef(){
+  const c=CURS[state.cur], r=state.rates[state.cur];
+  document.getElementById("mental").innerHTML = c.mental(r);
+  document.getElementById("ref").innerHTML = c.ref.map(a=>
+    `<tr tabindex="0" data-a="${a}"><td>${state.cur} ${a.toLocaleString("ko-KR")}</td><td>${krwStr(a*r)}</td></tr>`).join("");
+  document.querySelectorAll("#ref tr").forEach(tr=>{
+    const go=()=>{ state.reverse=false; state.input=String(tr.dataset.a); renderSwap(); renderScreen(); window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}); };
+    tr.onclick=go;
+    tr.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
+  });
+}
+function renderRates(){
+  document.getElementById("rates").innerHTML = Object.entries(CURS).map(([k,c])=>
+    `<label><span>1 ${k}</span><input type="number" inputmode="decimal" step="any" min="0" value="${state.rates[k]}" data-rate="${k}" aria-label="1 ${k}의 원화 환율"><span class="u">원</span></label>`).join("");
+  document.querySelectorAll("[data-rate]").forEach(inp=>inp.onchange=()=>{
+    const v=parseFloat(inp.value);
+    if(!(v>0)){ inp.value=state.rates[inp.dataset.rate]; return; }
+    state.rates[inp.dataset.rate]=v; store.set("fx-rates",state.rates);
+    document.getElementById("ratenote").textContent="직접 입력한 환율 기준";
+    renderScreen(); renderRef();
+  });
+}
+function renderSwap(){
+  document.getElementById("swaplabel").textContent = state.reverse ? `${state.cur} 금액으로 입력하기` : "원화 금액으로 입력하기";
+}
+function render(){
+  document.body.dataset.cur=state.cur;
+  if(CURS[state.cur].dec===0 && state.input.includes(".") && !state.reverse) state.input=state.input.split(".")[0];
+  renderCurs(); renderSwap(); renderScreen(); renderRef();
+}
+
+document.getElementById("swap").onclick=()=>{ state.reverse=!state.reverse; state.input=""; renderSwap(); renderScreen(); };
+document.getElementById("reset").onclick=()=>{
+  state.rates=Object.assign({},DEFAULTS); store.set("fx-rates",{});
+  document.getElementById("ratenote").textContent="11월 13일 환율 기준";
+  renderRates(); renderScreen(); renderRef();
+};
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(/^[0-9]$/.test(e.key)) press(e.key);
+  else if(e.key==="."||e.key===",") press(".");
+  else if(e.key==="Backspace") press("⌫");
+  else if(e.key==="Escape"||e.key==="Delete") press("C");
+});
+
+if(Object.keys(store.get("fx-rates",{})).length) document.getElementById("ratenote").textContent="직접 입력한 환율 기준";
+renderPad(); renderRates(); render();
+</script>
+</body>
+</html>
